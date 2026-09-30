@@ -18,6 +18,24 @@ type HarnessWindow = {
 const w = window as unknown as HarnessWindow
 w.__drcReact = { react: React, jsxRuntime, createRoot }
 
+/**
+ * 冻结并手动推进“现在”，让断言不依赖 runner 的时区与时刻。
+ *
+ * 这条测试要同时成立两件事：`11:30` 已经过了（超出宽限 → 应显示「已错过」）、
+ * `23:40` 还没到。之前用宿主真实时钟：本机（UTC+8，下午跑）过，CI（UTC，上午跑）
+ * 就挂——那时 11:30 还在未来。这里把“现在”钉在本机 2026-09-30 15:00，需要
+ * “时间流逝”时显式 `advanceClock()`：拖拽吞点击的 350ms 窗口也靠它，只冻结不推进
+ * 会让那条断言假过。
+ *
+ * 只覆盖 `Date.now()`（插件里所有“现在”都从它来，`new Date(ms)` 走参数）；
+ * `new Date()` 仍是真实时钟，所以诊断信息里的时间戳不受影响。
+ */
+let clockMs = new Date(2026, 8, 30, 15, 0, 0).getTime()
+const advanceClock = (ms: number) => {
+  clockMs += ms
+}
+Date.now = () => clockMs
+
 const lines: string[] = []
 const say = (text: string) => {
   lines.push(text)
@@ -223,7 +241,10 @@ const run = async () => {
     await sleep(100)
   }
   drag(200, 200, 240, 230)
-  await sleep(500) // 触摸拖动根本不会补 click；窗口过期后的点击必须照常生效
+  // 触摸拖动根本不会补 click；窗口过期后的点击必须照常生效。
+  // 窗口按 Date.now() 算，所以这里推时钟而不是 sleep（frozen clock 下 sleep 不推进它）。
+  advanceClock(600)
+  await sleep(60)
   pill.click()
   await sleep(200)
   report.drag.lateClickOpens = panelOpen()
