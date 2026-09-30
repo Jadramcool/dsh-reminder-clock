@@ -1,0 +1,8 @@
+# 统一换行：仓库里一律 LF，Windows 检出时也不会因为 CRLF 让每次 diff 全是噪音。
+* text=auto eol=lf
+
+# 二进制/生成物不参与文本规范化
+*.png binary
+*.jpg binary
+*.ico binary
+*.tgz binary

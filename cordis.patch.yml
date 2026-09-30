@@ -1,0 +1,14 @@
+# dsh-reminder-clock bundle patch: inserts the plugin row into the profile
+# roster. The row is a bare plugin by package name: the node half (exports ".")
+# runs in the host process and owns /api/reminder-clock/config, and the
+# dsh.client declaration in package.json makes the browser half
+# (exports "./client", served at /plugins/dsh-reminder-clock/client.js) load in
+# the web GUI.
+#
+# Activate with:
+#   dsh plugin --profile <name> add link:<path>/dsh-reminder-clock
+# The reminder schedule itself lives in ~/.dsh/reminder-clock.json and is edited
+# from 设置 → 作息提醒, so this row needs no config block.
+- insert:
+    - id: reminder-clock
+      name: 'dsh-reminder-clock'

@@ -1,0 +1,83 @@
+{
+  "name": "dsh-reminder-clock",
+  "version": "0.1.0",
+  "description": "DSH 作息提醒：到点（午餐 / 下班）在窗口内弹出提醒卡片，平时显示下一条提醒的倒计时；时间、文案、位置全部可在设置里改，并持久化到 Host 磁盘。 · A DeepSeek Harness (DSH) plugin that reminds you when to take lunch and when to clock off, with an in-page countdown pill, 大小周 shifts and the Chinese statutory holiday calendar.",
+  "type": "module",
+  "license": "MIT",
+  "author": "jdm <1051780106@qq.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jadramcool/dsh-reminder-clock.git"
+  },
+  "homepage": "https://github.com/Jadramcool/dsh-reminder-clock#readme",
+  "bugs": {
+    "url": "https://github.com/Jadramcool/dsh-reminder-clock/issues"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.0-rc.1"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "main": "lib/index.mjs",
+  "exports": {
+    ".": "./lib/index.mjs",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "files": [
+    "lib",
+    "src",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "typecheck": "tsc -p tsconfig.json",
+    "fetch-holidays": "node scripts/fetch-holidays.mjs",
+    "test": "node scripts/build.mjs && node test/host-smoke.mjs && node test/client-smoke.mjs",
+    "test:dom": "node scripts/build.mjs && node test/client-dom.mjs",
+    "prepack": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "reminder",
+    "clock",
+    "lunch",
+    "off-work",
+    "overlay",
+    "holiday",
+    "大小周"
+  ],
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "esbuild": "^0.28.2",
+    "prettier": "^3.9.9",
+    "react": "^18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "^5.9.3"
+  }
+}
