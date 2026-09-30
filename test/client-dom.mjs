@@ -95,8 +95,12 @@ try {
   // 3) 跑 headless Chrome（虚拟时间会把 harness 里的等待快进掉）
   mkdirSync(join(workDir, 'profile'), { recursive: true })
   const args = [
-    '--headless=new',
+    // 用裸 `--headless`：Chrome 112+ 它本身就是 new headless，`--headless=new`
+    // 在更新的版本上只是别名，裸写法跨版本更稳。
+    '--headless',
     '--disable-gpu',
+    // 容器/CI 里 /dev/shm 往往很小，不加这个 Chrome 会直接崩。
+    '--disable-dev-shm-usage',
     '--no-first-run',
     '--no-default-browser-check',
     '--allow-file-access-from-files',
@@ -118,16 +122,20 @@ try {
   } catch (err) {
     dom = String((err && err.stdout) || '')
     if (dom === '') {
-      console.error('chrome failed: ' + String((err && err.message) || err))
-      console.error(String((err && err.stderr) || '').slice(-2000))
+      const code = err && (err.status !== undefined ? err.status : err.code)
+      console.error('chrome failed (exit=' + String(code) + ', signal=' + String(err && err.signal) + ')')
+      console.error('chrome: ' + chrome)
+      console.error('stderr: ' + String((err && err.stderr) || '').slice(-3000))
+      console.error('stdout: ' + String((err && err.stdout) || '').slice(0, 1500))
       process.exit(1)
     }
   }
 
   const match = /<pre id="report">([\s\S]*?)<\/pre>/.exec(dom)
   if (match === null) {
-    console.error('the harness produced no report; tail of the DOM dump:')
-    console.error(dom.slice(-3000))
+    console.error('the harness produced no report (chrome ' + chrome + ', dom bytes ' + dom.length + ')')
+    console.error('--- dom head ---\n' + dom.slice(0, 1500))
+    console.error('--- dom tail ---\n' + dom.slice(-1500))
     process.exit(1)
   }
   const decoded = match[1]

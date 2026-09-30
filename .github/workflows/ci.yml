@@ -54,4 +54,17 @@ jobs:
           fi
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
-      - run: pnpm test:dom
+      - name: Real React DOM smoke
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test:dom 2>&1 | tee dom-test.log
+      # 失败时把原因做成 check annotation：匿名（无 token）也能从 API 读到，
+      # 不用登录翻 Actions 日志。
+      - name: Report failure
+        if: failure()
+        shell: bash
+        run: |
+          if [ ! -f dom-test.log ]; then echo "::error::client-dom failed before producing output"; exit 0; fi
+          MSG="$(tail -n 30 dom-test.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+          echo "::error title=client-dom failed::$MSG"
