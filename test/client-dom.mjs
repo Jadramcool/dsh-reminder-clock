@@ -17,16 +17,26 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+// 本机没装 Chrome 时打印 SKIP 并以 0 退出，所以这个脚本可以安全地放进 CI 的独立 job。
 const chromeCandidates = [
   process.env.CHROME_PATH,
+  // Windows
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
   join(process.env.LOCALAPPDATA || '', 'Google/Chrome/Application/chrome.exe'),
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+  // Linux（GitHub Actions 的 ubuntu runner 自带 Chrome）
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  // macOS
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/Applications/Chromium.app/Contents/MacOS/Chromium',
 ].filter((candidate) => typeof candidate === 'string' && candidate.length > 0)
 const chrome = chromeCandidates.find((candidate) => existsSync(candidate))
 
@@ -93,7 +103,9 @@ try {
     '--user-data-dir=' + join(workDir, 'profile'),
     '--virtual-time-budget=30000',
     '--dump-dom',
-    'file:///' + join(workDir, 'index.html').replace(/\\/g, '/'),
+    // CI 容器里的 Chrome 常常起不来命名空间沙箱；这里跑的是本地临时文件页面。
+    ...(process.env.CI ? ['--no-sandbox'] : []),
+    pathToFileURL(join(workDir, 'index.html')).href,
   ]
   let dom = ''
   try {

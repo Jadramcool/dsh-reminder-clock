@@ -18,6 +18,7 @@
     "dsh": ">=0.2.0-rc.1"
   },
   "packageManager": "pnpm@11.7.0",
+  "icon": "./icon.svg",
   "main": "lib/index.mjs",
   "exports": {
     ".": "./lib/index.mjs",
@@ -49,12 +50,14 @@
     "src",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "icon.svg"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs --watch",
     "typecheck": "tsc -p tsconfig.json",
+    "format:check": "prettier --check src/client/index.tsx src/index.mjs src/shared/config.mjs scripts/build.mjs scripts/fetch-holidays.mjs test/client-smoke.mjs test/client-dom.mjs test/dom-harness.ts test/host-smoke.mjs package.json",
     "fetch-holidays": "node scripts/fetch-holidays.mjs",
     "test": "node scripts/build.mjs && node test/host-smoke.mjs && node test/client-smoke.mjs",
     "test:dom": "node scripts/build.mjs && node test/client-dom.mjs",

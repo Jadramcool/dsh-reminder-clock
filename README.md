@@ -19,6 +19,26 @@
 
 ---
 
+## 🇬🇧 English
+
+**dsh-reminder-clock** is a plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH) that reminds you when to take lunch and when to clock off. Everything lives inside the DSH window — no desktop notifications, no sound.
+
+- **Countdown pill** in a corner (default bottom-right, or top-right) showing time until the next reminder; hover or click to expand today's schedule.
+- **Alert card** at the reminder time, with *Got it* / *Snooze N minutes* / *Mute for today*.
+- **Workday awareness** per reminder: every day, workdays only, or rest days only. Workdays understand Chinese **大小周** (alternating 5/6-day weeks) and the **statutory holiday calendar** (holidays + make-up workdays), plus per-date manual overrides.
+- **Holiday countdown** row in the panel: the next public holiday, how long it lasts, how many days to go.
+- **Configurable**: item emoji/label/time/message, snooze + grace window, overlay position (or drag the pill anywhere, snap back to presets), all from **Settings → 作息提醒**; persisted on the host disk, so it survives a cache wipe or a different browser.
+
+```bash
+# DSH 0.2.0-rc.1+, Node ^22.19 || >=24, pnpm 11
+dsh plugin --profile <profile> add dsh-reminder-clock   # from npm
+dsh plugin --profile <profile> add link:<this repo>      # from a checkout
+```
+
+Holiday data comes from the public `timor.tech` API (an aggregation of the State Council's published arrangements), cached on disk for 30 days with a bundled snapshot as offline fallback; runtime requests are made from your own machine, the plugin sends **no telemetry and collects no data**. The UI text is currently Chinese-only. Licensed under [MIT](LICENSE) — docs, comments and issues are also mostly Chinese; English issues are welcome.
+
+---
+
 ## ✨ 功能
 
 | 能力 | 说明 |
@@ -88,9 +108,12 @@ pnpm dev            # 同上，但 watch：存盘即重建（配合 client HMR�
 pnpm typecheck      # tsc --noEmit（宽松基线，当前 0 error）
 pnpm test           # build + host 真 HTTP/真磁盘 + client 真 React SSR/驱动式交互
 pnpm test:dom       # 真 React 18 + 真 DOM（headless Chrome）驱动真产物 lib/client.js
+pnpm format:check   # prettier 校验（README / CHANGELOG 的表格是手排的，不在范围内）
 pnpm fetch-holidays              # 抓今年 + 明年的节假日，重写 src/holidays.mjs
 pnpm fetch-holidays 2027 2028    # 也可以指定年份
 ```
+
+CI 就是这套：`.github/workflows/ci.yml` 在 Node 22 / 24 上各跑一次 `typecheck` + `format:check` + `test`，`test:dom` 单独一个 job（用 runner 自带的 Chrome，找不到就 job 失败，不会静默跳过）。
 
 > `pnpm test:dom` 是**可选**的：它需要本机 Chrome（可用 `CHROME_PATH` 指定），找不到就打
 > `SKIPPED` 并正常退出，所以没进 `pnpm test`。它专门盖住桩 React 结构上测不了的一层——
@@ -182,6 +205,12 @@ rm ~/.dsh/reminder-clock.json
 
 > 浮层位置可换：只有**右下（默认）**和右上两个预设 —— 右下用 `column-reverse`，所以面板是**向上**弹出的，胶囊自己不会往上跑；右上则向下弹。也可以直接拖动胶囊到任意位置（拖到预设附近会吸附回去）。
 > 旧版本写下的配置没有 `calendar` / `days`：升级后 `下班` 会按「仅工作日」处理（`午餐` 保持每天），`calendar` 取默认值。
+
+## 🤝 贡献与安全
+
+改代码前先看一眼 [CONTRIBUTING.md](CONTRIBUTING.md)（环境、命令、**`lib/` 是故意入库的产物**、以及"配置契约只有一份"等约定）。版本变更看 [CHANGELOG.md](CHANGELOG.md)。
+
+发现漏洞请走私密通道，不要开公开 issue —— 细节见 [SECURITY.md](SECURITY.md)。
 
 ## 📄 License
 

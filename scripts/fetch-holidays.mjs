@@ -15,7 +15,10 @@ import { fileURLToPath } from 'node:url'
 
 const PROVIDER = 'https://timor.tech/api/holiday/year/'
 const thisYear = new Date().getFullYear()
-const years = process.argv.slice(2).map(Number).filter((year) => Number.isInteger(year) && year > 1970)
+const years = process.argv
+  .slice(2)
+  .map(Number)
+  .filter((year) => Number.isInteger(year) && year > 1970)
 const wanted = years.length > 0 ? years : [thisYear, thisYear + 1]
 
 /** `[{ '01-01': { holiday: true, name: '元旦' } }]` -> `{ '01-01': [1, '元旦'] }` */
@@ -25,9 +28,7 @@ function compact(payload) {
   if (map === null || typeof map !== 'object') return days
   for (const [key, entry] of Object.entries(map)) {
     if (entry === null || typeof entry !== 'object') continue
-    const mmdd = typeof entry.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(entry.date)
-      ? entry.date.slice(5)
-      : key
+    const mmdd = typeof entry.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(entry.date) ? entry.date.slice(5) : key
     if (!/^\d{2}-\d{2}$/.test(mmdd)) continue
     days[mmdd] = [entry.holiday === true ? 1 : 0, String(entry.name || '').trim()]
   }
@@ -66,11 +67,9 @@ if (Object.keys(data).length === 0) {
   process.exit(1)
 }
 
-const body = JSON.stringify(
-  Object.fromEntries(Object.entries(data).map(([year, days]) => [year, days])),
-  null,
-  2,
-).replace(/"(\d{2}-\d{2})": \[/g, "'$1': [").replace(/\]\n/g, '],\n')
+const body = JSON.stringify(Object.fromEntries(Object.entries(data).map(([year, days]) => [year, days])), null, 2)
+  .replace(/"(\d{2}-\d{2})": \[/g, "'$1': [")
+  .replace(/\]\n/g, '],\n')
 
 const out = `/**
  * 国家法定节假日 + 调休补班日的内置快照，由 scripts/fetch-holidays.mjs 生成，请勿手改。
@@ -87,7 +86,18 @@ const out = `/**
 export const BUNDLED_HOLIDAYS_PROVIDER = ${JSON.stringify(PROVIDER)}
 
 export const BUNDLED_HOLIDAYS = {
-${Object.entries(data).map(([year, days]) => '  ' + year + ': {\n' + Object.entries(days).map(([mmdd, entry]) => "    '" + mmdd + "': [" + entry[0] + ", " + JSON.stringify(entry[1]) + '],').join('\n') + '\n  },').join('\n')}
+${Object.entries(data)
+  .map(
+    ([year, days]) =>
+      '  ' +
+      year +
+      ': {\n' +
+      Object.entries(days)
+        .map(([mmdd, entry]) => "    '" + mmdd + "': [" + entry[0] + ', ' + JSON.stringify(entry[1]) + '],')
+        .join('\n') +
+      '\n  },',
+  )
+  .join('\n')}
 }
 `
 
